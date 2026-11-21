@@ -3,8 +3,8 @@ process.env.HLR_FAKE_API_KEY = 'test-key';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { restoreOriginalUrl } = require('../api/index');
-const { decideReply } = require('../src/fake-hlr');
+const { restoreOriginalUrl, decideReply } = require('../src/fake-hlr');
+
 
 test('puts back the path and keeps the caller\'s query values', () => {
   assert.equal(restoreOriginalUrl('/api/index?__path=hlr&msisdn=919876543211'), '/hlr?msisdn=919876543211');

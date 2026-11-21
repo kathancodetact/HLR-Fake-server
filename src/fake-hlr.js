@@ -122,8 +122,36 @@ function send(response, status, body, headers = {}) {
   response.end(JSON.stringify(body));
 }
 
+/**
+ * Vercel's rewrite (vercel.json) sends every path to one entry and passes the path the caller asked for as "__path"; this puts it
+ * back, keeping the caller's own query values. A URL without "__path" (Render, local) is returned as it is.
+ * Example: "/api/index?__path=hlr%2F919876543212&x=1" → "/hlr/919876543212?x=1".
+ */
+function restoreOriginalUrl(receivedUrl) {
+  const url = new URL(receivedUrl || '/', 'http://fake-hlr.local');
+
+  if (!url.searchParams.has('__path')) return receivedUrl || '/';
+
+  const path = url.searchParams.get('__path') || '';
+
+  url.searchParams.delete('__path');
+
+  const query = url.searchParams.toString();
+
+  return `/${path.replace(/^\/+/, '')}${query ? `?${query}` : ''}`;
+}
+
 /** The request handler, shared by the Node server (Render, local) and the Vercel function. */
 async function handleRequest(request, response) {
+  // TEMPORARY diagnostic: shows what the platform passes in. Removed once the Vercel routing is confirmed.
+  const receivedUrl = request.url;
+  const routeHeaders = Object.fromEntries(Object.entries(request.headers).filter(([name]) => /matched|route|forwarded-uri|original|path|invoke|rewrite/i.test(name)));
+
+  request.url = restoreOriginalUrl(request.url);
+  response.setHeader('x-debug-received-url', encodeURI(String(receivedUrl)));
+  response.setHeader('x-debug-restored-url', encodeURI(String(request.url)));
+  response.setHeader('x-debug-route-headers', encodeURI(JSON.stringify(routeHeaders)));
+
   let rawBody = '';
 
   try {
@@ -158,4 +186,4 @@ async function handleRequest(request, response) {
   });
 }
 
-module.exports = { decideReply, handleRequest, API_KEY, DELAY_MS };
+module.exports = { decideReply, handleRequest, restoreOriginalUrl, API_KEY, DELAY_MS };
