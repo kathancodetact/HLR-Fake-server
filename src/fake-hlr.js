@@ -118,7 +118,8 @@ async function readRawBody(request) {
 function send(response, status, body, headers = {}) {
   if (response.writableEnded) return;
 
-  response.writeHead(status, { 'Content-Type': 'application/json', ...headers });
+  // no-store: every answer is decided per request, so Vercel's edge must never serve a cached one.
+  response.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers });
   response.end(JSON.stringify(body));
 }
 
@@ -143,14 +144,7 @@ function restoreOriginalUrl(receivedUrl) {
 
 /** The request handler, shared by the Node server (Render, local) and the Vercel function. */
 async function handleRequest(request, response) {
-  // TEMPORARY diagnostic: shows what the platform passes in. Removed once the Vercel routing is confirmed.
-  const receivedUrl = request.url;
-  const routeHeaders = Object.fromEntries(Object.entries(request.headers).filter(([name]) => /matched|route|forwarded-uri|original|path|invoke|rewrite/i.test(name)));
-
   request.url = restoreOriginalUrl(request.url);
-  response.setHeader('x-debug-received-url', encodeURI(String(receivedUrl)));
-  response.setHeader('x-debug-restored-url', encodeURI(String(request.url)));
-  response.setHeader('x-debug-route-headers', encodeURI(JSON.stringify(routeHeaders)));
 
   let rawBody = '';
 
