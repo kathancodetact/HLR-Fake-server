@@ -31,9 +31,13 @@ The number can be sent in the query (`/hlr?msisdn=919876543211`), the path (`/hl
 ## Run locally
 
 ```bash
-npm start        # http://localhost:9900/hlr
-npm test         # 4 tests
+cp .env.example .env   # then set your own HLR_FAKE_API_KEY
+npm run dev            # loads .env, http://localhost:9900/hlr
+npm start              # without .env (default key fake-hlr-key)
+npm test               # 4 tests
 ```
+
+`.env` is for local runs only and is never committed (it is in `.gitignore`). Vercel and Render don't read it: set the same values in their dashboards.
 
 ```bash
 curl -H "x-api-key: fake-hlr-key" "http://localhost:9900/hlr?msisdn=919876543211"
