@@ -21,7 +21,14 @@ function restoreOriginalUrl(rewrittenUrl) {
 }
 
 module.exports = (request, response) => {
+  // TEMPORARY diagnostic: shows what Vercel passes to the function. Removed once the routing is confirmed.
+  const receivedUrl = request.url;
+  const routeHeaders = Object.fromEntries(Object.entries(request.headers).filter(([name]) => /matched|route|forwarded-uri|original|path|invoke|rewrite/i.test(name)));
+
   request.url = restoreOriginalUrl(request.url);
+  response.setHeader('x-debug-received-url', encodeURI(String(receivedUrl)));
+  response.setHeader('x-debug-restored-url', encodeURI(String(request.url)));
+  response.setHeader('x-debug-route-headers', encodeURI(JSON.stringify(routeHeaders)));
 
   return handleRequest(request, response);
 };
