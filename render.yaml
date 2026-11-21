@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: hlr-fake-server
+    runtime: node
+    plan: free
+    buildCommand: "echo no build needed"
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: HLR_FAKE_API_KEY
+        sync: false
+      - key: HLR_FAKE_DELAY_MS
+        value: "15000"
